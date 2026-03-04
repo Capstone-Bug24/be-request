@@ -1,5 +1,5 @@
 import dotenv from 'dotenv';
-dotenv.config();
+dotenv.config(); //env 로드 무조건 최상단
 
 import app from './app.js';
 

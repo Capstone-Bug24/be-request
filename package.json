@@ -3,8 +3,10 @@
   "version": "1.0.0",
   "description": "AI 기반 산업현장 모니터링 시스템 요청처리 백엔드",
   "main": "index.js",
+  "type": "module",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "dev": "nodemon src/server.js",
+    "start": "node src/server.js"
   },
   "keywords": [],
   "author": "",
