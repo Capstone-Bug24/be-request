@@ -34,7 +34,7 @@ app.get('/db-check', async (req, res) => {
     });
   }
 });
-// IoT 
+// IoT 데이터입력
 app.post('/api/iot/collect', async (req, res) => {
   const { device_id, sensor_type, value, image_path } = req.body;
 
@@ -61,7 +61,38 @@ app.post('/api/iot/collect', async (req, res) => {
   });
 });
 
+// 회원가입 API
+app.post('/api/auth/signup', async (req, res) => {
+  const { email, password } = req.body;
 
+  const { data, error } = await supabase.auth.signUp({
+    email,
+    password,
+  });
+
+  if (error) return res.status(400).json({ error: error.message });
+  res.status(201).json({ message: "회원가입 성공! 이메일을 확인해주세요.", data });
+});
+
+// 로그인 API
+app.post('/api/auth/login', async (req, res) => {
+  const { email, password } = req.body;
+
+  const { data, error } = await supabase.auth.signInWithPassword({
+    email,
+    password,
+  });
+
+  if (error) return res.status(401).json({ error: "이메일 또는 비밀번호가 틀렸습니다." });
+
+  // 로그인 성공 시 access_token이 발급됩니다. 
+  // 프론트엔드는 이 토큰을 저장해두었다가 나중에 인증이 필요한 API를 호출할 때 써야 합니다.
+  res.json({ 
+    message: "로그인 성공!",
+    token: data.session.access_token,
+    user: data.user 
+  });
+});
 // 특정 센서의 가장 최신 데이터 1개만 가져오기
 app.get('/api/sensor/latest', async (req, res) => {
   try {
