@@ -8,19 +8,38 @@ export const signUp = async (req, res) => {
     return res.status(400).json({ error: "이메일, 비밀번호, 이름은 필수입니다." });
   }
 
-  const { data, error } = await supabase.auth.signUp({
+  const { data : authData, error : authError } = await supabase.auth.signUp({
     email,
     password,
     options: {
       data: {
         full_name: full_name,
-        phone_number: phone_number || " " //profiles 테이블로 들어감, 선택 사항
+        phone_number: phone_number || "" //profiles 테이블로 들어감, 선택 사항
       }
     }
   });
 
-  if (error) return res.status(400).json({ error: error.message });
-  res.status(201).json({ message: "회원가입 성공! 이메일을 확인해주세요.", data });
+  if (authError) return res.status(400).json({ error: authError.message });
+  // 2. 가입된 유저의 ID를 가져와서 profiles 테이블에 추가 저장
+  if (authData.user) {
+    const { error: profileError } = await supabase
+      .from('profiles') // 내 DB의 profiles 테이블
+      .insert([
+        { 
+          id: authData.user.id, // Auth 유저 ID와 연결 (Foreign Key)
+          full_name: full_name, 
+          phone_number: phone_number || "",
+          email: email 
+        }
+      ]);
+
+    if (profileError) {
+      console.error("프로필 저장 실패:", profileError);
+      // 유저는 생성됐지만 프로필 저장이 실패한 경우에 대한 처리가 필요할 수 있습니다.
+    }
+  }
+
+  return res.status(200).json({ message: "회원가입 및 프로필 저장 완료", user: authData.user });
 };
 
 export const login = async (req, res) => {
