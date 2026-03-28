@@ -2,7 +2,7 @@
 import { supabase } from '../config/supabase.js';
 
 export const signUp = async (req, res) => {
-  const { email, password, full_name } = req.body;
+  const { email, password, phone_number, full_name } = req.body;
   
   if (!email || !password || !full_name) {
     return res.status(400).json({ error: "이메일, 비밀번호, 이름은 필수입니다." });
@@ -13,7 +13,8 @@ export const signUp = async (req, res) => {
     password,
     options: {
       data: {
-        full_name: full_name || NULL //profiles 테이블로 들어감, 전화번호는 선택 아무 입력이 없으면 NULL값이 들어감
+        full_name: full_name,
+        phone_number: phone_number || NULL //profiles 테이블로 들어감, 선택 사항
       }
     }
   });
