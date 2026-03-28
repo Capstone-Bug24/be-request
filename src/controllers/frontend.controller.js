@@ -14,7 +14,7 @@ export const signUp = async (req, res) => {
     options: {
       data: {
         full_name: full_name,
-        phone_number: phone_number || NULL //profiles 테이블로 들어감, 선택 사항
+        phone_number: phone_number || " " //profiles 테이블로 들어감, 선택 사항
       }
     }
   });
