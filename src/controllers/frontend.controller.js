@@ -1,14 +1,12 @@
 // src/controllers/frontend.controller.js
 import { supabase } from '../config/supabase.js';
-
+//회원가입
 export const signUp = async (req, res) => {
   const { email, password, full_name, phone_number } = req.body;
   
   if (!email || !password || !full_name) {
     return res.status(400).json({ error: "이메일, 비밀번호, 이름은 필수입니다." });
   }
-
-  console.log("들어온 데이터:", { email, full_name, phone_number });
   
   const { data : authData, error : authError } = await supabase.auth.signUp({
     email,
@@ -44,7 +42,7 @@ export const signUp = async (req, res) => {
 
   return res.status(200).json({ message: "회원가입 및 프로필 저장 완료", user: authData.user });
 };
-
+//로그인
 export const login = async (req, res) => {
   const { email, password } = req.body;
   const { data, error } = await supabase.auth.signInWithPassword({ email, password });
@@ -79,27 +77,40 @@ export const updateProfile = async (req, res) => {
   if (!authHeader) return res.status(401).json({ error: "인증 토큰이 필요합니다." });
 
   const token = authHeader.split(' ')[1];
+  //현재 로그인한 유저 확인
   const { data: { user }, error: authError } = await supabase.auth.getUser(token);
 
   if (authError || !user) return res.status(401).json({ error: "유효하지 않은 토큰입니다." });
 
-  // 2. profiles 테이블 업데이트
-  const { data, error } = await supabase
-    .from('profiles')
-    .update({ 
-      full_name, 
-      phone_number,
-      updated_at: new Date() 
-    })
-    .eq('id', user.id) // 본인 아이디인 경우만!
-    .select();
-
-  if (error) return res.status(500).json({ error: error.message });
-
-  res.json({ 
-    message: "프로필이 성공적으로 업데이트되었습니다.", 
-    data: data[0] 
+ try {
+  const { data: authUpdate, error: updateError } = await supabase.auth.updateUser({
+    data: {
+      full_name: full_name,
+      phone_number: phone_number
+    }
   });
+
+  if (updateError) throw updateError;
+
+  const {data: profileData, error: profileError } = await supabase
+    .from('profiles')
+    .update({
+      full_name,
+      phone_number,
+      updated_at: new Date()
+    })
+    .eq('id', user.id)
+    .select();
+  if (profileError) throw profileError;
+  res.json({
+    message: "프로필 정보가 모두 업데이트되었습니다.",
+    data: profileData[0],
+    user: authUpdate.user
+  });
+ } catch (error) {
+  console.error("업데이트 중 오류 발생:", error.message);
+  res.status(500).json({error: error.message});
+ }
 };
 
 // src/controllers/frontend.controller.js
@@ -174,4 +185,63 @@ export const updatePassword = async (req, res) => {
     message: "비밀번호가 성공적으로 변경되었습니다.",
     user: data.user 
   });
+};
+
+// src/controllers/frontend.controller.js 에 추가
+
+export const getLefreshUser = async (req, res) => {
+  // 1. 헤더에서 토큰 추출
+  const authHeader = req.headers.authorization;
+  if (!authHeader) return res.status(401).json({ error: "토큰이 없습니다." });
+
+  const token = authHeader.split(' ')[1];
+
+  try {
+    // 2. [핵심] 토큰을 사용하여 Supabase Auth로부터 최신 유저 정보 조회
+    // 이 단계에서 'user_metadata'에 담긴 최신 이름, 전화번호가 나옵니다.
+    const { data: { user }, error: authError } = await supabase.auth.getUser(token);
+
+    if (authError || !user) return res.status(401).json({ error: "유효하지 않은 토큰입니다." });
+
+    // 3. (선택사항) 필요하다면 profiles 테이블의 데이터도 함께 조회
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('*')
+      .eq('id', user.id)
+      .single();
+
+    res.json({
+      message: "최신 프로필 조회 성공",
+      user: {
+        ...user,
+        full_name: profile?.full_name || user.user_metadata?.full_name,
+        phone_number: profile?.phone_number || user.user_metadata?.phone_number
+      }
+    });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+//로그아웃
+// src/controllers/frontend.controller.js
+
+export const logout = async (req, res) => {
+  try {
+    // 1. 헤더에서 토큰 추출 (현재 로그인된 세션을 찾기 위함)
+    const authHeader = req.headers.authorization;
+    if (!authHeader) return res.status(401).json({ error: "로그인 상태가 아닙니다." });
+
+    const token = authHeader.split(' ')[1];
+
+    // 2. Supabase 로그아웃 실행
+    // 이 명령이 실행되면 해당 토큰은 서버에서 무효화됩니다.
+    const { error } = await supabase.auth.signOut(token);
+
+    if (error) throw error;
+
+    res.json({ message: "성공적으로 로그아웃되었습니다." });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
 };
