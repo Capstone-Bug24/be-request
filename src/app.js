@@ -3,6 +3,7 @@ import express from 'express';
 import cors from 'cors';
 import frontendRoutes from './routes/frontend.routes.js';
 import iotRoutes from './routes/iot.routes.js';
+import aiRoutes from './routes/ai.routes.js';
 
 const app = express();
 
@@ -15,5 +16,6 @@ app.get('/health', (req, res) => res.json({ status: 'ok' }));
 // API 라우트 등록 (버전 관리 포함)
 app.use('/api/auth', frontendRoutes);
 app.use('/api/iot', iotRoutes);
+app.use('/api/events', aiRoutes);
 
 export default app;
