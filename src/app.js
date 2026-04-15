@@ -16,6 +16,6 @@ app.get('/health', (req, res) => res.json({ status: 'ok' }));
 // API 라우트 등록 (버전 관리 포함)
 app.use('/api/auth', frontendRoutes);
 app.use('/api/iot', iotRoutes);
-app.use('/api/events', aiRoutes);
+app.use('/api/ai', aiRoutes);
 
 export default app;
