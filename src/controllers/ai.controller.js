@@ -4,8 +4,8 @@ export const handleAiEvent = async (req, res) => {
     try {
         const data = req.body;
         //유효성 검사
-        if (!data.event_id) {
-            return res.status(400).json({ success: false, error: "Missing event_id" });
+        if (!data.analysis_id) {
+            return res.status(400).json({ success: false, error: "Missing analysis_id" });
         }
 
         // 원본 데이터 복사하여 로그용 데이터 분리
@@ -25,7 +25,7 @@ export const handleAiEvent = async (req, res) => {
         //IoT 데이터 변환 및 저장
         if (data.sensors && Object.keys(data.sensors).length > 0) {
             const sensorEntries = Object.values(data.sensors).map((item) => ({
-                event_id: data.event_id,
+                analysis_id: data.analysis_id,
                 sensor_device_id : item.id,
                 sensor_type : item.type,
                 sensor_ts : item.ts,
@@ -40,6 +40,9 @@ export const handleAiEvent = async (req, res) => {
 
             if (sensorError) throw sensorError;
         }
+
+        //alerts가 비어있다면 평상시 상태로 취급
+        const currentSeverity = data.alerts?.[0]?.severity || "NORMAL";
         //조건부 상태 변화 체크 및 알람 저장
         const { data: lastEvent } = await supabase
             .from('ai_events')
@@ -50,30 +53,22 @@ export const handleAiEvent = async (req, res) => {
             .maybeSingle();
 
         //저장 전 백엔드에서 비율 계산 추가
-        if (!lastEvent || lastEvent.severity !== data.severity) {
-            const { sensors, ...aiEventData } = data;
-            if (aiEventData.bbox && aiEventData.resolution) {
-                const { x1, y1, x2, y2 } = aiEventData.bbox;
-                const { width, height } = aiEventData.resolution;
-
-                const w = x2 - x1;
-                const h = y1 - y2;
-
-                aiEventData.bbox = {
-                    raw: {x : x1, y : y1, w, h},
-                    ratio: {
-                        x: parseFloat((x1 / width).toFixed(4)),
-                        y: parseFloat((y1 / height).toFixed(4)),
-                        w: parseFloat((w / width).toFixed(4)),
-                        h: parseFloat((h / height).toFixed(4))
-                    },
-                    resolution: { width, height }
-                };
-            }
+        if (!lastEvent || lastEvent.severity !== currentSeverity) {
+            const aiEventData = {
+                analysis_id: data.analysis_id,
+                ts: data.ts,
+                camera_id: data.camera_id,
+                frame_id: data.frame_id,
+                severity: currentSeverity,
+                detections: data.detections,
+                alerts: data.alerts,
+                zones: data.zones
+            };
+            
             //ai_events 테이블에 저장
             const { error: aiError } = await supabase
-            .from('ai_events')
-            .insert([aiEventData]);
+                .from('ai_events')
+                .insert([aiEventData]);
 
             if (aiError) throw aiError;
 
