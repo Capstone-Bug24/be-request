@@ -4,6 +4,7 @@ import cors from 'cors';
 import frontendRoutes from './routes/frontend.routes.js';
 import iotRoutes from './routes/iot.routes.js';
 import aiRoutes from './routes/ai.routes.js';
+import hisRoutes from './routes/history.routes.js';
 
 const app = express();
 
@@ -17,5 +18,6 @@ app.get('/health', (req, res) => res.json({ status: 'ok' }));
 app.use('/api/auth', frontendRoutes);
 app.use('/api/iot', iotRoutes);
 app.use('/api/ai', aiRoutes);
+app.use('/api/history', hisRoutes);
 
 export default app;

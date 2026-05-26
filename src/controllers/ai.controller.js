@@ -8,9 +8,16 @@ export const handleAiEvent = async (req, res) => {
             return res.status(400).json({ success: false, error: "Missing analysis_id" });
         }
 
+        const currentSeverity = data.severity || data.alerts?.[0]?.severity || "NORMAL";
+
         // 원본 데이터 복사하여 로그용 데이터 분리
         const logData = JSON.parse(JSON.stringify(data));
         delete logData.sensors;
+
+        delete logData.id;
+
+        //로그 테이블 데이터에도 최상위에 severity 컬럼 값이 명시되도록 강제 주입
+        logData.severity = currentSeverity;
 
         //전체 로그 저장(ai_event_logs)
         const { error: logError } = await supabase
@@ -41,22 +48,25 @@ export const handleAiEvent = async (req, res) => {
             if (sensorError) throw sensorError;
         }
 
-        //alerts가 비어있다면 평상시 상태로 취급
-        const currentSeverity = data.alerts?.[0]?.severity || "NORMAL";
         //조건부 상태 변화 체크 및 알람 저장
         const { data: lastEvent } = await supabase
             .from('ai_events')
             .select('severity')
+            .eq('site_id', data.site_id)
             .eq('camera_id', data.camera_id)
-            .order('ts', { ascending: false })
+            .order('id', { ascending: false })
             .limit(1)
             .maybeSingle();
+        //대소문자 통일
+        const isSameState = lastEvent && 
+            String(lastEvent.severity).toUpperCase() === String(currentSeverity).toUpperCase();
 
         //저장 전 백엔드에서 비율 계산 추가
-        if (!lastEvent || lastEvent.severity !== currentSeverity) {
+        if (!isSameState) {
             const aiEventData = {
                 analysis_id: data.analysis_id,
                 ts: data.ts,
+                site_id: data.site_id,
                 camera_id: data.camera_id,
                 frame_id: data.frame_id,
                 severity: currentSeverity,
@@ -74,7 +84,7 @@ export const handleAiEvent = async (req, res) => {
 
             console.log('디비 저장 성공');
         } else {
-            console.log('위험상태가 이전과 동일해 저장 안함');
+            console.log('위험상태가 이전과 동일해 ai_events에는 저장 안함 (로그에는 적재됨)');
         }
         return res.status(201).json({ success: true, message: "Data processed successfully" });
     } catch (error) {
