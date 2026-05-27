@@ -5,6 +5,8 @@ import frontendRoutes from './routes/frontend.routes.js';
 import iotRoutes from './routes/iot.routes.js';
 import aiRoutes from './routes/ai.routes.js';
 import hisRoutes from './routes/history.routes.js';
+import overviewRoutes from './routes/overview.routes.js';
+
 
 const app = express();
 
@@ -19,5 +21,6 @@ app.use('/api/auth', frontendRoutes);
 app.use('/api/iot', iotRoutes);
 app.use('/api/ai', aiRoutes);
 app.use('/api/history', hisRoutes);
+app.use('/api/overview', overviewRoutes);
 
 export default app;
