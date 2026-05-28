@@ -54,6 +54,7 @@ export const handleAiEvent = async (req, res) => {
             .select('severity')
             .eq('site_id', data.site_id)
             .eq('camera_id', data.camera_id)
+            .eq('is_resolved', 0)
             .order('id', { ascending: false })
             .limit(1)
             .maybeSingle();

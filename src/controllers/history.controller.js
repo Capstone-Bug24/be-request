@@ -83,7 +83,7 @@ export const logs = async (req, res) => {
     // 4. 데이터 가공 (AI Response 형식 구조에 맞춤 최적화)
     // ============================================================
     const formattedLogs = (rawLogs || []).map((row, index) => {
-      const logId = from + index + 1;
+      const logId = from + index + 1; //프론트용 가짜 ID 생성
       
       // ISO 8601 타임스탬프 ➔ YYYY-MM-DD HH:mm:ss 변환
       let formattedTime = "알 수 없는 시간";
@@ -120,6 +120,7 @@ export const logs = async (req, res) => {
       // 프론트 요청 규격 튜플 배열 반환 [id, time, zone, severity, type, desc]
       return [
         logId,
+        row.id, //디비 
         formattedTime,
         zoneCode || displayZone, // 쿼리 파라미터로 구역코드를 고정했다면 그걸 쓰고 아니면 추출한 구역 표시
         severityCode,
