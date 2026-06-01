@@ -272,6 +272,10 @@ export const getLatestBboxData = async (req, res) => {
 
 // 가공 로직 분리 (재사용성 향상)
 export const formatBboxData = (data) => {
+  const hasCriticalAlert = data.alerts?.some(alert => 
+    ['HIGH', 'CRITICAL'].includes(alert.severity?.toUpperCase())
+  ) ?? false;
+
   return {
     analysis_id: data.analysis_id,
     frame_size: { width: data.frame_width, height: data.frame_height },
@@ -280,10 +284,7 @@ export const formatBboxData = (data) => {
       type: det.object_type,
       bbox: det.bbox,
       bbox_norm: det.bbox_norm,
-      is_alert: data.alerts?.some(alert => 
-        alert.object_refs?.includes(det.detection_id) && 
-        ['HIGH', 'CRITICAL'].includes(alert.severity?.toUpperCase())
-      ) ?? false
+      is_alert: hasCriticalAlert
     })),
     zones: data.zones.map(zone => ({
       id: zone.zone_id,

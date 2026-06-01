@@ -4,6 +4,14 @@ import { supabase } from '../config/supabase.js';
  * 히스토리 로그 조회 (페이징, 필터링 및 튜플 배열 가공)
  * GET /api/history/logs
  */
+
+const getZoneAlpha = (camera_id) => {
+  if (!camera_id) return "Z";//ID가 없으면 기본값
+  //숫자 추출(cam01 -> 1)
+  const num = parseInt(camera_id.replace(/\D/g, '', 10));
+  const alpha = String.fromCharCode(64 + num);
+  return alpha;
+}
 export const logs = async (req, res) => {
   try {
     // 1. 요청 파라미터 파싱 및 기본값(Default) 설정
@@ -98,12 +106,8 @@ export const logs = async (req, res) => {
       
       // 2. 구역 코드/이름 추출 로직 보완
       // alerts에 zone_refs가 있다면 그걸 쓰고, 없다면 zones 배열의 첫번째 name을 씁니다.
-      let displayZone = "기타 구역";
-      if (mainAlert.zone_refs && mainAlert.zone_refs.length > 0) {
-        displayZone = mainAlert.zone_refs.join(', '); // 예: "danger_q2, forklift_lane"
-      } else if (row.zones?.[0]?.name) {
-        displayZone = row.zones[0].name;
-      }
+      // 카메라 ID 기반의 구역 식별자 추출
+      const displayZone = getZoneAlpha(row.camera_id);
       
       // 3. 심각도 치환 (대소문자 완벽 방어)
       const rawSeverity = String(mainAlert.severity || row.zones?.[0]?.severity || '').toUpperCase();
@@ -122,7 +126,7 @@ export const logs = async (req, res) => {
         logId,
         row.id, //디비 
         formattedTime,
-        zoneCode || displayZone, // 쿼리 파라미터로 구역코드를 고정했다면 그걸 쓰고 아니면 추출한 구역 표시
+        displayZone, //추출한 구역 표시
         severityCode,
         mainAlert.event_type || 'GENERAL',
         mainAlert.message || '상세 내용 없음'

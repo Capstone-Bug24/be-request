@@ -62,6 +62,7 @@ export const handleAiEvent = async (req, res) => {
             .from('ai_events')
             .select('severity')
             .eq('site_id', data.site_id)
+            .eq('frame_ts',data.frame_ts)
             .eq('camera_id', data.camera_id)
             .eq('is_resolved', 0)
             .order('id', { ascending: false })
