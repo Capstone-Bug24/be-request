@@ -98,8 +98,20 @@ export const fetchOverviewData = async () => {
         timeStr = date.toLocaleTimeString('ko-KR', { hour12: false });
       }
       
-      const sevLetter = event.severity?.toLowerCase() === 'critical' ? 'c' : 'w';
-      
+      // [수정된 부분]
+      // event.severity를 기준으로 'c', 'w', 'i'를 명확히 분류합니다.
+      let sevLetter = 'i'; // 기본값 (info/normal)
+      const rawSev = event.severity?.toLowerCase();
+
+      if (rawSev === 'critical') {
+        sevLetter = 'c';
+      } else if (rawSev === 'high' || rawSev === 'warning') {
+        sevLetter = 'w';
+      } else {
+        sevLetter = 'i'; // 'normal' 혹은 그 외 상황
+      }
+
+      // JSON 파싱 로직은 그대로 유지
       let parsedAlerts = [];
       if (event.alerts) {
         if (typeof event.alerts === 'string') {
