@@ -6,7 +6,7 @@ import { supabase } from '../config/supabase.js';
  */
 
 const getZoneAlpha = (camera_id) => {
-  if (!camera_id) return "Z";//ID가 없으면 기본값
+  if (!camera_id) return "G";//ID가 없으면 기본값
   //숫자 추출(cam01 -> 1)
   const num = parseInt(camera_id.replace(/\D/g, '', 10));
   const alpha = String.fromCharCode(64 + num);
