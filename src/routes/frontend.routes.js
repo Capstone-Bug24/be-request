@@ -11,5 +11,6 @@ router.delete('/deleteuser', authCtrl.deleteUser);
 router.put('/update-password', authCtrl.updatePassword);
 router.get('/refresh', authCtrl.getLefreshUser);
 router.post('/logout', authCtrl.logout);
+router.get('/bbox', authCtrl.getLatestBboxData);
 
 export default router;

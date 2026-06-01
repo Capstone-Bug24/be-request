@@ -1,5 +1,6 @@
 // src/controllers/frontend.controller.js
 import { supabase } from '../config/supabase.js';
+
 //회원가입
 export const signUp = async (req, res) => {
   const { email, password, full_name, phone_number } = req.body;
@@ -244,4 +245,50 @@ export const logout = async (req, res) => {
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
+};
+
+
+export const getLatestBboxData = async (req, res) => {
+  try {
+    const { data, error } = await supabase
+      .from('ai_events')
+      .select('*')
+      .order('id', { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    if (error) throw error;
+    if (!data) return res.status(404).json({ message: "데이터가 없습니다." });
+
+    // 데이터 가공 로직 (별도 함수로 분리하면 더 좋습니다)
+    const processedData = formatBboxData(data);
+
+    // [API 응답] 요청한 프론트엔드에게 즉시 응답
+    res.json(processedData);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+// 가공 로직 분리 (재사용성 향상)
+export const formatBboxData = (data) => {
+  return {
+    analysis_id: data.analysis_id,
+    frame_size: { width: data.frame_width, height: data.frame_height },
+    detections: data.detections.map(det => ({
+      id: det.detection_id,
+      type: det.object_type,
+      bbox: det.bbox,
+      bbox_norm: det.bbox_norm,
+      is_alert: data.alerts?.some(alert => 
+        alert.object_refs?.includes(det.detection_id) && 
+        ['HIGH', 'CRITICAL'].includes(alert.severity?.toUpperCase())
+      ) ?? false
+    })),
+    zones: data.zones.map(zone => ({
+      id: zone.zone_id,
+      name: zone.name,
+      points: zone.points
+    }))
+  };
 };
