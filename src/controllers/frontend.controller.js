@@ -251,7 +251,7 @@ export const logout = async (req, res) => {
 export const getLatestBboxData = async (req, res) => {
   try {
     const { data, error } = await supabase
-      .from('ai_events')
+      .from('ai_event_logs')
       .select('*')
       .order('id', { ascending: false })
       .limit(1)
