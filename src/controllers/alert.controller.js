@@ -7,7 +7,7 @@ import { supabase } from '../config/supabase.js';
 export const resolveAlert = async (req, res) => {
     try {
         // 1. 프론트엔드에서 보낸 알람 고유 ID 추출
-        const { id } = req.body;
+        const { id } = req.params;
 
         if (!id) {
             return res.status(400).json({ success: false, error: "올바른 알람 ID(alertId)가 필요합니다." });

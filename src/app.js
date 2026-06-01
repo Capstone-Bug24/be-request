@@ -22,6 +22,6 @@ app.use('/api/iot', iotRoutes);
 app.use('/api/ai', aiRoutes);
 app.use('/api/history', hisRoutes);
 app.use('/api/overview', overviewRoutes);
-app.use('/api/alert', alertRoutes);
+app.use('/api/alarms', alertRoutes);
 
 export default app;
