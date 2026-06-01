@@ -110,7 +110,7 @@ export const logs = async (req, res) => {
       const displayZone = getZoneAlpha(row.camera_id);
       
       // 3. 심각도 치환 (대소문자 완벽 방어)
-      const rawSeverity = String(mainAlert.severity || row.zones?.[0]?.severity || '').toUpperCase();
+      const rawSeverity = String(row.severity || mainAlert.severity || '').toUpperCase();
       let severityCode = 'i'; // 기본값
       
       if (rawSeverity === 'CRITICAL' || rawSeverity === 'C') {
