@@ -67,7 +67,6 @@ export const login = async (req, res) => {
   });
 };
 
-// src/controllers/frontend.controller.js
 
 export const updateProfile = async (req, res) => {
   const { full_name, phone_number } = req.body;
@@ -114,7 +113,6 @@ export const updateProfile = async (req, res) => {
  }
 };
 
-// src/controllers/frontend.controller.js
 
 export const deleteUser = async (req, res) => {
   // 1. 인증 토큰 확인
@@ -154,7 +152,6 @@ export const deleteUser = async (req, res) => {
   }
 };
 
-// src/controllers/frontend.controller.js
 
 export const updatePassword = async (req, res) => {
   const { new_password } = req.body;
@@ -188,7 +185,6 @@ export const updatePassword = async (req, res) => {
   });
 };
 
-// src/controllers/frontend.controller.js 에 추가
 
 export const getLefreshUser = async (req, res) => {
   // 1. 헤더에서 토큰 추출
@@ -225,7 +221,6 @@ export const getLefreshUser = async (req, res) => {
 };
 
 //로그아웃
-// src/controllers/frontend.controller.js
 
 export const logout = async (req, res) => {
   try {

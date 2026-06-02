@@ -32,11 +32,11 @@ export const handleAiEvent = async (req, res) => {
             throw logError;
         }
         
-        if (io) {
-            // DB에서 꺼내지 않고, 방금 들어온 req.body(data)를 바로 가공해서 쏨
-            const bboxData = formatBboxData(data); 
-            io.emit('bbox_update', bboxData);
-        }
+        // if (io) {
+        //     // DB에서 꺼내지 않고, 방금 들어온 req.body(data)를 바로 가공해서 쏨
+        //     const bboxData = formatBboxData(data); 
+        //     io.emit('bbox_update', bboxData);
+        // }
 
         //IoT 데이터 변환 및 저장
         if (data.sensors && Object.keys(data.sensors).length > 0) {
@@ -98,14 +98,18 @@ export const handleAiEvent = async (req, res) => {
             console.log('디비 저장 성공');
 
             if (io) {
-                // 1. 대시보드 오버뷰 업데이트
-                const freshData = await fetchOverviewData();
-                io.emit('overview_update', freshData);
+                try {
+                    // 대시보드 업데이트
+                    const freshData = await fetchOverviewData();
+                    io.emit('overview_update', freshData);
 
-                // 2. BBOX 화면 실시간 업데이트
-                // data.alerts 등은 aiEventData에 이미 들어있으므로 포맷팅 함수를 태웁니다.
-                const bboxData = formatBboxData(aiEventData); 
-                io.emit('bbox_update', bboxData);
+                    // BBox 업데이트 (가장 최신 데이터 기준으로 전송)
+                    const bboxData = formatBboxData(data); 
+                    io.emit('bbox_update', bboxData);
+                    console.log('실시간 데이터 전송 완료');
+                } catch (e) {
+                    console.error("웹소켓 전송 실패:", e);
+                }
             }
         } else {
             console.log('위험상태가 이전과 동일해 ai_events에는 저장 안함 (로그에는 적재됨)');
