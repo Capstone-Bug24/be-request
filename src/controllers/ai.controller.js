@@ -3,7 +3,10 @@ import { io } from '../sockets/socketManager.js';
 import { fetchOverviewData } from './overview.controller.js';
 import { formatBboxData } from './frontend.controller.js';
 
+let bboxClearTimer = null;
+
 export const handleAiEvent = async (req, res) => {
+    
     try {
         const data = req.body;
         //유효성 검사
@@ -107,6 +110,14 @@ export const handleAiEvent = async (req, res) => {
                     const bboxData = formatBboxData(data); 
                     io.emit('bbox_update', bboxData);
                     console.log('실시간 데이터 전송 완료');
+
+                    //기존 타이머가 있으면 반드시 취소!
+                    if (bboxClearTimer) clearTimeout(bboxClearTimer);
+                    // 5초 뒤 클리어 타이머 설정
+                    bboxClearTimer = setTimeout(() => {
+                        io.emit('bbox_update', { detections: [], zones: [] });
+                        console.log('타이머 잔상 삭제'); 
+                    }, 5000);
                 } catch (e) {
                     console.error("웹소켓 전송 실패:", e);
                 }
